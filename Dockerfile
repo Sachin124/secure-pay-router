@@ -1,4 +1,4 @@
-# Dockerfile for Secure Pay Router
+# Dockerfile for Node.js + TypeScript Express app
 
 # Stage 1: Build
 FROM node:18-alpine AS builder

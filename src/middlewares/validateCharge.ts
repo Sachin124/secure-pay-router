@@ -9,6 +9,7 @@ const chargeSchema = Joi.object({
 });
 
 export const validateCharge = (req: Request, res: Response, next: NextFunction) => {
+  console.log('Validating charge request:', req.body);
   const { error } = chargeSchema.validate(req.body);
   if (error) {
     return res.status(400).json({ errors: error.details });

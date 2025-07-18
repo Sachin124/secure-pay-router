@@ -46,5 +46,7 @@ export const chargeController = async (req: Request, res: Response) => {
 };
 
 export const getTransactions = (_req: Request, res: Response) => {
+  console.log('Fetching all transactions');
   res.status(200).json(transactions);
 };
+ 
