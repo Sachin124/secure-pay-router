@@ -34,7 +34,7 @@ export async function generateExplanation(score: number, reasons: string[], prov
       console.error('Groq API error or missing content:', result.error || result);
       return fallbackExplanation(score, reasons, provider);
     }
-    return result.choices[0].message.content.trim();
+    return "Response from Grok: " + result.choices[0].message.content.trim();
   } catch (err) {
     console.error('Groq API error:', err);
     return fallbackExplanation(score, reasons, provider);
