@@ -19,7 +19,7 @@ export const chargeController = async (req: Request, res: Response) => {
     const status = provider === 'blocked' ? 'blocked' : 'success';
 
     // 3. Generate explanation (LLM or simulated)
-    const explanation = await generateExplanation(score, reasons);
+    const explanation = await generateExplanation(score, reasons, provider);
 
     // 4. Build transaction object
     const transaction: Transaction = {

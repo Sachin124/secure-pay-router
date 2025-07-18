@@ -19,7 +19,7 @@ A Node.js + TypeScript Express API for secure payment routing, fraud detection, 
    - Copy `.env.example` to `.env` (or create `.env`):
      ```env
      PORT=3000
-     OPENAI_API_KEY=your-openai-key (optional)
+     GROQ_API_KEY=your-groq-key (optional, for LLM explanations)
      ```
 4. **Build the project:**
    ```sh
@@ -146,9 +146,10 @@ Fraud score is calculated using these heuristics:
 
 ---
 
-## 🤖 LLM Usage
-- If `OPENAI_API_KEY` is set, the API will use OpenAI (GPT) to generate a natural-language explanation for the risk decision.
+## 🤖 LLM Usage (GROQ)
+- If `GROQ_API_KEY` is set, the API will use [Groq LLM](https://groq.com/) (Llama-4) to generate a natural-language explanation for the risk decision.
 - If not, a simulated explanation is generated based on the fraud reasons.
+- The model used is `meta-llama/llama-4-scout-17b-16e-instruct` via the Groq API.
 
 ---
 
