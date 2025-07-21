@@ -50,3 +50,20 @@ function fallbackExplanation(score: number, reasons: string[], provider?: string
     return `This payment was allowed due to a low risk score based on: ${reasons.join(', ')}.`;
   }
 }
+// check my code proper
+// harcoded code use constant , use config example emails to block, constants like 0.5  single place for all
+// add ip in payload rate limiter something 
+
+// create seprate things 
+
+// use solid principles 
+
+// 
+
+
+
+
+
+
+
+

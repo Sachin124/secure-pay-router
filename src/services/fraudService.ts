@@ -1,4 +1,5 @@
 // src/services/fraudService.ts
+import { paymentConfig } from '../config/paymentConfig';
 
 export function calculateFraudScore(email: string, amount: number): { score: number, reasons: string[] } {
   let score = 0;
@@ -12,8 +13,7 @@ export function calculateFraudScore(email: string, amount: number): { score: num
 
   // Heuristic 2: Suspicious email domain
   const domain = email.split('@')[1]?.toLowerCase() || '';
-  const suspiciousDomains = ['.ru', '.test.com'];
-  if (suspiciousDomains.some(suffix => domain.endsWith(suffix))) {
+  if (paymentConfig.suspiciousEmailDomains.some(suffix => domain.endsWith(suffix))) {
     score += 0.4;
     reasons.push('Suspicious email domain');
   }

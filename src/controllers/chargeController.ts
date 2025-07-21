@@ -15,7 +15,7 @@ export const chargeController = async (req: Request, res: Response) => {
     const { score, reasons } = calculateFraudScore(email, amount);
 
     // 2. Route payment or block
-    const provider = routePayment(score);
+    const provider = await routePayment(score, email);
     const status = provider === 'blocked' ? 'blocked' : 'success';
 
     // 3. Generate explanation (LLM or simulated)
