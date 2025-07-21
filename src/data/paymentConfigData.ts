@@ -24,6 +24,10 @@ export const paymentConfigData = {
       reason: 'Random base score'
     }
   },
+  status: {
+    blocked: 'blocked',
+    success: 'success'
+  },
   explanationMessages: {
     blocked: 'This payment was blocked due to a high risk score based on: {reasons}.',
     routed: 'This payment was routed to {provider} due to a low risk score based on: {reasons}.',

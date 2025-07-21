@@ -5,6 +5,7 @@ import { routePayment } from '../services/paymentRouter';
 import { generateExplanation } from '../services/llmService';
 import { logTransaction, transactions } from '../data/transactionsStore';
 import { Transaction } from '../models/Transaction';
+import { paymentConfigData } from '../data/paymentConfigData';
 
 export const chargeController = async (req: Request, res: Response) => {
   try {
@@ -16,7 +17,10 @@ export const chargeController = async (req: Request, res: Response) => {
 
     // 2. Route payment or block
     const provider = await routePayment(score, email);
-    const status = provider === 'blocked' ? 'blocked' : 'success';
+    if (provider === 'error_config_fetch') {
+      return res.status(503).json({ error: 'Service temporarily unavailable due to configuration error. Please try again later.' });
+    }
+    const status = provider === paymentConfigData.status.blocked ? paymentConfigData.status.blocked : paymentConfigData.status.success;
 
     // 3. Generate explanation (LLM or simulated)
     const explanation = await generateExplanation(score, reasons, provider);

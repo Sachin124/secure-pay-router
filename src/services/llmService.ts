@@ -4,13 +4,19 @@ dotenv.config();
 
 // If using Node 18+, fetch is available globally. If not, uncomment the next line:
 // import fetch from 'node-fetch';
+import { fetchPaymentConfig } from '../config/paymentConfig';
 
 export async function generateExplanation(score: number, reasons: string[], provider?: string): Promise<string> {
   if (!process.env.GROQ_API_KEY) {
-    return fallbackExplanation(score, reasons, provider);
+    return await fallbackExplanation(score, reasons, provider);
   }
 
   try {
+    const paymentConfig = await fetchPaymentConfig();
+    const { blockScoreThreshold, status, availableGateways } = paymentConfig;
+    const isBlocked = score >= blockScoreThreshold;
+    const providerText = isBlocked ? status.blocked : `routed to ${provider}`;
+    const prompt = `Fraud score: ${score}\nReasons: ${reasons.join(', ')}\nExplain in one sentence why this payment was ${providerText} in natural language.`;
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -21,7 +27,7 @@ export async function generateExplanation(score: number, reasons: string[], prov
         model: 'meta-llama/llama-4-scout-17b-16e-instruct',
         messages: [
           { role: 'system', content: 'You are a payment risk analyst.' },
-          { role: 'user', content: `Fraud score: ${score}\nReasons: ${reasons.join(', ')}\nExplain in one sentence why this payment was ${score >= 0.5 ? 'blocked' : `routed to ${provider}`} in natural language.` }
+          { role: 'user', content: prompt }
         ],
         max_tokens: 60,
         temperature: 0.7
@@ -41,29 +47,21 @@ export async function generateExplanation(score: number, reasons: string[], prov
   }
 }
 
-function fallbackExplanation(score: number, reasons: string[], provider?: string): string {
-  if (score >= 0.5) {
-    return `This payment was blocked due to a high risk score based on: ${reasons.join(', ')}.`;
-  } else if (provider === 'paypal' || provider === 'stripe') {
-    return `This payment was routed to ${provider?.charAt(0).toUpperCase() + provider?.slice(1)} due to a low risk score based on: ${reasons.join(', ')}.`;
-  } else {
-    return `This payment was allowed due to a low risk score based on: ${reasons.join(', ')}.`;
+async function fallbackExplanation(score: number, reasons: string[], provider?: string): Promise<string> {
+  try {
+    const paymentConfig = await fetchPaymentConfig();
+    const { blockScoreThreshold, availableGateways, explanationMessages } = paymentConfig;
+    if (score >= blockScoreThreshold) {
+      return explanationMessages.blocked.replace('{reasons}', reasons.join(', '));
+    } else if (provider && availableGateways.includes(provider)) {
+      return explanationMessages.routed
+        .replace('{provider}', provider.charAt(0).toUpperCase() + provider.slice(1))
+        .replace('{reasons}', reasons.join(', '));
+    } else {
+      return explanationMessages.allowed.replace('{reasons}', reasons.join(', '));
+    }
+  } catch (err) {
+    console.error('Config fetch failed in fallbackExplanation:', err);
+    return 'Unable to generate explanation due to configuration error.';
   }
 }
-// check my code proper
-// harcoded code use constant , use config example emails to block, constants like 0.5  single place for all
-// add ip in payload rate limiter something 
-
-// create seprate things 
-
-// use solid principles 
-
-// 
-
-
-
-
-
-
-
-

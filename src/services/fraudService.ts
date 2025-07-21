@@ -6,27 +6,31 @@ export function calculateFraudScore(email: string, amount: number): { score: num
   const reasons: string[] = [];
 
   // Heuristic 1: High amount
-  if (amount > 1000) {
-    score += 0.4;
-    reasons.push('Amount greater than 1000');
+  const { threshold: highAmountThreshold, score: highAmountScore, reason: highAmountReason } = paymentConfig.fraudRules.highAmount;
+  if (amount > highAmountThreshold) {
+    score += highAmountScore;
+    reasons.push(highAmountReason);
   }
 
   // Heuristic 2: Suspicious email domain
   const domain = email.split('@')[1]?.toLowerCase() || '';
+  const { score: suspiciousDomainScore, reason: suspiciousDomainReason } = paymentConfig.fraudRules.suspiciousDomain;
   if (paymentConfig.suspiciousEmailDomains.some(suffix => domain.endsWith(suffix))) {
-    score += 0.4;
-    reasons.push('Suspicious email domain');
+    score += suspiciousDomainScore;
+    reasons.push(suspiciousDomainReason);
   }
   // Simple pattern: domain looks suspicious (e.g., contains numbers or odd TLD)
+  const { score: patternDomainScore, reason: patternDomainReason } = paymentConfig.fraudRules.patternDomain;
   if (/\d/.test(domain) || domain.endsWith('.xyz') || domain.length < 5) {
-    score += 0.2;
-    reasons.push('Email domain looks suspicious');
+    score += patternDomainScore;
+    reasons.push(patternDomainReason);
   }
 
   // Heuristic 3: Random base score
-  const randomBase = Math.random() * 0.3;
+  const { max: randomBaseScoreMax, reason: randomBaseReason } = paymentConfig.fraudRules.randomBase;
+  const randomBase = Math.random() * randomBaseScoreMax;
   score += randomBase;
-  reasons.push(`Random base score: ${randomBase.toFixed(2)}`);
+  reasons.push(`${randomBaseReason}: ${randomBase.toFixed(2)}`);
 
   // Clamp score to 1.0 max
   score = Math.min(score, 1.0);
