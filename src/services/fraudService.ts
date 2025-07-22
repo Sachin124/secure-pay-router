@@ -1,6 +1,6 @@
 // src/services/fraudService.ts
 import { paymentConfig } from '../config/paymentConfig';
-
+import crypto from 'crypto';
 export function calculateFraudScore(email: string, amount: number): { score: number, reasons: string[] } {
   let score = 0;
   const reasons: string[] = [];
@@ -28,7 +28,7 @@ export function calculateFraudScore(email: string, amount: number): { score: num
 
   // Heuristic 3: Random base score
   const { max: randomBaseScoreMax, reason: randomBaseReason } = paymentConfig.fraudRules.randomBase;
-  const randomBase = Math.random() * randomBaseScoreMax;
+  const randomBase = seededRandom(email, amount) * randomBaseScoreMax;
   score += randomBase;
   reasons.push(`${randomBaseReason}: ${randomBase.toFixed(2)}`);
 
@@ -36,4 +36,10 @@ export function calculateFraudScore(email: string, amount: number): { score: num
   score = Math.min(score, 1.0);
 
   return { score, reasons };
-} 
+}
+
+function seededRandom(email:string, amount:number): number {
+  const hash = crypto.createHash('md5').update(`${email}${amount}`).digest('hex');
+  const seed = parseInt(hash.slice(0, 8), 16);
+  return (seed % 1000) / 1000; // Normalize to [0, 1] it mean returns floats between 0 and 1
+}

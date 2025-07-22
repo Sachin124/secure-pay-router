@@ -2,21 +2,28 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-// If using Node 18+, fetch is available globally. If not, uncomment the next line:
-// import fetch from 'node-fetch';
 import { fetchPaymentConfig } from '../config/paymentConfig';
+import { getLLMCache, setLLMCache } from '../utils/llmCache';
 
-export async function generateExplanation(score: number, reasons: string[], provider?: string): Promise<string> {
+// Use Node 18+ global fetch or uncomment this for older versions:
+// import fetch from 'node-fetch';
+
+export async function generateExplanation(
+  score: number,
+  reasons: string[],
+  provider?: string
+): Promise<string> {
+  const prompt = await buildPrompt(score, reasons, provider);
+  const cached = getLLMCache(prompt);
+  if (cached) {
+    return `Cached response: ${cached}`;
+  }
+
   if (!process.env.GROQ_API_KEY) {
-    return await fallbackExplanation(score, reasons, provider);
+    return fallbackExplanation(score, reasons, provider);
   }
 
   try {
-    const paymentConfig = await fetchPaymentConfig();
-    const { blockScoreThreshold, status, availableGateways } = paymentConfig;
-    const isBlocked = score >= blockScoreThreshold;
-    const providerText = isBlocked ? status.blocked : `routed to ${provider}`;
-    const prompt = `Fraud score: ${score}\nReasons: ${reasons.join(', ')}\nExplain in one sentence why this payment was ${providerText} in natural language.`;
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -35,33 +42,63 @@ export async function generateExplanation(score: number, reasons: string[], prov
     });
 
     const result = await response.json();
-    if (result.error || !result.choices?.[0]?.message?.content) {
-      // Log the error for debugging
-      console.error('Groq API error or missing content:', result.error || result);
+    const content = result.choices?.[0]?.message?.content?.trim();
+
+    if (!content) {
+      console.error('Groq response missing content:', result);
       return fallbackExplanation(score, reasons, provider);
     }
-    return "Response from Grok: " + result.choices[0].message.content.trim();
+
+    const finalResult = `Response from Groq: ${content}`;
+    console.log('My Prompt', prompt);
+    
+    setLLMCache(prompt, finalResult);
+    return finalResult;
+
   } catch (err) {
     console.error('Groq API error:', err);
     return fallbackExplanation(score, reasons, provider);
   }
 }
 
+// Extracted: Build Prompt based on config
+async function buildPrompt(score: number, reasons: string[], provider?: string): Promise<string> {
+  try {
+    const config = await fetchPaymentConfig();
+    const isBlocked = score >= config.blockScoreThreshold;
+    const providerText = isBlocked ? config.status.blocked : `routed to ${provider}`;
+    return `Fraud score: ${score}\nReasons: ${reasons.join(', ')}\nExplain in one sentence why this payment was ${providerText} in natural language.`;
+  } catch (err) {
+    console.error('Prompt build failed:', err);
+    return `Fraud score: ${score}\nReasons: ${reasons.join(', ')}\nExplain this payment decision.`;
+  }
+}
+
+// Safe and config-based fallback message
 async function fallbackExplanation(score: number, reasons: string[], provider?: string): Promise<string> {
   try {
-    const paymentConfig = await fetchPaymentConfig();
-    const { blockScoreThreshold, availableGateways, explanationMessages } = paymentConfig;
+    const config = await fetchPaymentConfig();
+    const { blockScoreThreshold, explanationMessages, availableGateways } = config;
+
     if (score >= blockScoreThreshold) {
       return explanationMessages.blocked.replace('{reasons}', reasons.join(', '));
-    } else if (provider && availableGateways.includes(provider)) {
-      return explanationMessages.routed
-        .replace('{provider}', provider.charAt(0).toUpperCase() + provider.slice(1))
-        .replace('{reasons}', reasons.join(', '));
-    } else {
-      return explanationMessages.allowed.replace('{reasons}', reasons.join(', '));
     }
+
+    if (provider && availableGateways.includes(provider)) {
+      return explanationMessages.routed
+        .replace('{provider}', capitalize(provider))
+        .replace('{reasons}', reasons.join(', '));
+    }
+
+    return explanationMessages.allowed.replace('{reasons}', reasons.join(', '));
+
   } catch (err) {
     console.error('Config fetch failed in fallbackExplanation:', err);
     return 'Unable to generate explanation due to configuration error.';
   }
+}
+
+// Utility
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
