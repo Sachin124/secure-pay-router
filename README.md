@@ -1,5 +1,23 @@
 # Secure Pay Router
 
+
+This is a mini backend service built with **Node.js** and **TypeScript** that simulates a secure payment gateway proxy. It detects fraud risk based on custom rules, routes payments accordingly, and uses **LLMs** (Groq, Gemini) to generate human-readable explanations for each transaction decision.
+
+---
+
+## 🚀 Features
+
+- Fraud detection engine using heuristic rules (amount, domain, patterns)
+- AI explanation via Groq and Gemini with fallback strategy
+- Smart payment routing: block, Stripe, or PayPal
+- LLM response caching (prompt → response) for performance
+- Input validation using Joi
+- Rate-limiting to prevent abuse
+- Docker-ready
+- GET `/transactions` endpoint to view history
+
+---
+
 A Node.js + TypeScript Express API for secure payment routing, fraud detection, and explainable risk scoring.
 
 ---
