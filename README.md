@@ -16,6 +16,37 @@ This is a mini backend service built with **Node.js** and **TypeScript** that si
 - Docker-ready
 - GET `/transactions` endpoint to view history
 
+
+## How the Fraud Score Works
+
+Each payment gets a risk score, from 0 (safe) to 1 (risky), based on these rules:
+
+- **Big Amount:** If the amount is above 1,000, add 0.4.
+- **Suspicious Email Domain:** If the email ends with `.ru` or `.test.com`, add 0.4.
+- **Weird Domain:** If the domain is very short, has numbers, or ends with `.xyz`, add 0.2.
+- **Random Base:** Every email+amount combo gets a small, consistent random score (up to 0.3).
+- **Max Score:** Score never goes over 1.0.
+
+**You get:**  
+- The fraud score (number 0–1)  
+- Reasons list (which rules triggered)
+
+#### Example
+
+For `user@scam.ru` paying $2,000:
+- Big amount (+0.4), `.ru` domain (+0.4), maybe weird domain (+0.2), plus random (capped at 1.0)
+- Reasons show each trigger
+
+----
+
+Add this to your README.md under a section called **How the Fraud Scoring Works** or similar.  
+Use bullet points and headers—don’t just paste a wall of text[3][6][4].
+
+If you still want me to format the full README.md with all sections (Title, Setup, Features, Fraud Logic, etc.), just say so!
+
+Sources:
+- Always break large text into sections and use simple, clear language for README files[3][4][6].
+
 ---
 
 A Node.js + TypeScript Express API for secure payment routing, fraud detection, and explainable risk scoring.
