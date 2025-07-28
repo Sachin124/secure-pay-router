@@ -37,16 +37,6 @@ For `user@scam.ru` paying $2,000:
 - Big amount (+0.4), `.ru` domain (+0.4), maybe weird domain (+0.2), plus random (capped at 1.0)
 - Reasons show each trigger
 
-----
-
-Add this to your README.md under a section called **How the Fraud Scoring Works** or similar.  
-Use bullet points and headers—don’t just paste a wall of text[3][6][4].
-
-If you still want me to format the full README.md with all sections (Title, Setup, Features, Fraud Logic, etc.), just say so!
-
-Sources:
-- Always break large text into sections and use simple, clear language for README files[3][4][6].
-
 ---
 
 A Node.js + TypeScript Express API for secure payment routing, fraud detection, and explainable risk scoring.
